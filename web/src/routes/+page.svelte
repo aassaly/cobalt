@@ -1,6 +1,4 @@
 <script>
-    import { t } from "$lib/i18n/translations";
-
     import Omnibox from "$components/save/Omnibox.svelte";
     import SupportedServices from "$components/save/SupportedServices.svelte";
 </script>
@@ -20,10 +18,6 @@
         <h1>Fetch</h1>
         <Omnibox />
     </main>
-    <div id="terms-note">
-        {$t("save.terms.note.agreement")}
-        <a href="/about/terms">{$t("save.terms.note.link")}</a>
-    </div>
 </div>
 
 <style>
@@ -42,23 +36,10 @@
         gap: 15px;
     }
 
-    #terms-note {
-        bottom: 0;
-        color: var(--gray);
-        font-size: 12px;
-        text-align: center;
-        padding-bottom: 6px;
-        font-weight: 500;
-    }
-
     @media screen and (max-width: 535px) {
         #cobalt-save-container {
             padding-top: calc(var(--padding) / 2);
         }
 
-        #terms-note {
-            font-size: 11px;
-            padding-bottom: 0;
-        }
     }
 </style>
