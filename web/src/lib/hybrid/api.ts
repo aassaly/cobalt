@@ -41,6 +41,7 @@ export const startYtDlp = async (url: string) => {
             fetchPot: settings.fetchPot,
             potTrace: settings.potTrace,
             manualPoTokens: settings.manualPoTokens || null,
+            typedOptions: settings.typedOptions,
         }),
     });
     if (!response.ok) {

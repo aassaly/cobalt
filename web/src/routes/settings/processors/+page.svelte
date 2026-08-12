@@ -7,12 +7,14 @@
     let profileName = "youtube";
     let cookieFile: File | undefined;
     let capabilities: Record<string, unknown> | undefined;
+    let catalog: { groups?: Array<{ id: string; label: string; options: Array<{ id: string; flags: string[]; control: string }> }> } = {};
     let message = "";
 
     const refresh = async () => {
         const cookies = await fetch(`${env.YTDLP_API}/api/cookies`).then((r) => r.json());
         profiles = cookies.profiles || [];
         capabilities = await fetch(`${env.YTDLP_API}/api/capabilities`).then((r) => r.json());
+        catalog = await fetch(`${env.YTDLP_API}/api/settings/catalog`).then((r) => r.json());
     };
 
     const uploadCookies = async () => {
@@ -52,6 +54,36 @@
     <p>These arguments are passed directly to yt-dlp. The service appends its controlled output target and source URL.</p>
     <textarea rows="8" bind:value={$hybridSettings.rawArguments} spellcheck="false" placeholder={'--impersonate chrome\n--write-subs\n--embed-subs'}></textarea>
 </section>
+
+{#each catalog.groups || [] as group}
+    {#if !["youtube_proof_of_origin", "authentication"].includes(group.id)}
+        <section>
+            <h2>{group.label}</h2>
+            {#each group.options as option}
+                {#if option.id !== "raw_arguments" && option.flags.length}
+                    {#if option.control === "boolean"}
+                        <label class="inline">
+                            <input
+                                type="checkbox"
+                                checked={Boolean($hybridSettings.typedOptions[option.id])}
+                                onchange={(event) => hybridSettings.update((value) => ({ ...value, typedOptions: { ...value.typedOptions, [option.id]: (event.currentTarget as HTMLInputElement).checked } }))}
+                            />
+                            {option.flags.join(", ")}
+                        </label>
+                    {:else}
+                        <label>{option.flags.join(", ")}
+                            <input
+                                value={String($hybridSettings.typedOptions[option.id] || "")}
+                                onchange={(event) => hybridSettings.update((value) => ({ ...value, typedOptions: { ...value.typedOptions, [option.id]: (event.currentTarget as HTMLInputElement).value } }))}
+                                spellcheck="false"
+                            />
+                        </label>
+                    {/if}
+                {/if}
+            {/each}
+        </section>
+    {/if}
+{/each}
 
 <section>
     <h2>YouTube proof of origin</h2>

@@ -13,6 +13,7 @@ export type HybridSettings = {
     fetchPot: "auto" | "always" | "never";
     potTrace: boolean;
     manualPoTokens: string;
+    typedOptions: Record<string, boolean | string | string[]>;
 };
 
 const defaults: HybridSettings = {
@@ -24,6 +25,7 @@ const defaults: HybridSettings = {
     fetchPot: "auto",
     potTrace: false,
     manualPoTokens: "",
+    typedOptions: {},
 };
 
 const load = (): HybridSettings => {
