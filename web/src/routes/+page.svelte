@@ -2,13 +2,12 @@
     import { t } from "$lib/i18n/translations";
 
     import Omnibox from "$components/save/Omnibox.svelte";
-    import Meowbalt from "$components/misc/Meowbalt.svelte";
     import SupportedServices from "$components/save/SupportedServices.svelte";
 </script>
 
 <svelte:head>
-    <title>{$t("general.cobalt")}</title>
-    <meta property="og:title" content={$t("general.cobalt")} />
+    <title>Fetch</title>
+    <meta property="og:title" content="Fetch" />
 </svelte:head>
 
 <div id="cobalt-save-container" class="center-column-container">
@@ -18,7 +17,7 @@
         tabindex="-1"
         data-first-focus
     >
-        <Meowbalt emotion="smile" />
+        <h1>Fetch</h1>
         <Omnibox />
     </main>
     <div id="terms-note">

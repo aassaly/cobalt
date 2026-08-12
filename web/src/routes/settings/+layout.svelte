@@ -22,6 +22,7 @@
 
     import IconBug from "@tabler/icons-svelte/IconBug.svelte";
     import IconAdjustmentsStar from "@tabler/icons-svelte/IconAdjustmentsStar.svelte";
+    import IconArrowsSplit from "@tabler/icons-svelte/IconArrowsSplit.svelte";
 
     $: versionText = $version
         ? `v${$version.version}-${$version.commit.slice(0, 8)}`
@@ -36,6 +37,12 @@
 >
     <svelte:fragment slot="navigation">
         <PageNavSection>
+            <PageNavTab
+                path="/settings/processors"
+                title="Processors and yt-dlp"
+                icon={IconArrowsSplit}
+                iconColor="green"
+            />
             <PageNavTab
                 path="/settings/appearance"
                 title={$t("settings.page.appearance")}

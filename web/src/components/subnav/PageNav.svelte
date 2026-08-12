@@ -18,9 +18,10 @@
     let screenWidth: number;
 
     $: currentPageTitle = $page.url.pathname.split("/").pop();
+    $: customTitle = currentPageTitle === "processors" ? "Processors and yt-dlp" : $t(`${pageName}.page.${currentPageTitle}`);
     $: stringPageTitle =
         currentPageTitle !== pageName
-            ? ` / ${$t(`${pageName}.page.${currentPageTitle}`)}`
+            ? ` / ${customTitle}`
             : "";
 
     $: isMobile = screenWidth <= 750;
@@ -34,11 +35,11 @@
 
 <svelte:head>
     <title>
-        {homeTitle}{stringPageTitle} ~ {$t("general.cobalt")}
+        {homeTitle}{stringPageTitle} ~ Fetch
     </title>
     <meta
         property="og:title"
-        content="{homeTitle}{stringPageTitle} ~ {$t('general.cobalt')}"
+        content="{homeTitle}{stringPageTitle} ~ Fetch"
     />
 </svelte:head>
 
@@ -65,7 +66,7 @@
                     data-first-focus
                 >
                     {#if !isHome}
-                        {$t(`${pageName}.page.${currentPageTitle}`)}
+                        {customTitle}
                     {:else}
                         {homeTitle}
                     {/if}

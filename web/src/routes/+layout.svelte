@@ -26,7 +26,6 @@
 
     import Sidebar from "$components/sidebar/Sidebar.svelte";
     import Turnstile from "$components/misc/Turnstile.svelte";
-    import NotchSticker from "$components/misc/NotchSticker.svelte";
     import DialogHolder from "$components/dialog/DialogHolder.svelte";
     import ProcessingQueue from "$components/queue/ProcessingQueue.svelte";
     import UpdateNotification from "$components/misc/UpdateNotification.svelte";
@@ -108,9 +107,6 @@
         data-reduce-motion={reduceMotion}
         data-reduce-transparency={reduceTransparency}
     >
-        {#if device.is.iPhone && app.is.installed}
-            <NotchSticker />
-        {/if}
         <DialogHolder />
         <Sidebar />
         {#if $updated}
@@ -217,8 +213,7 @@
         height: 0;
         position: absolute;
         z-index: -10;
-        content: url(/meowbalt/smile.png) url(/meowbalt/error.png)
-            url(/meowbalt/question.png) url(/meowbalt/think.png);
+        content: none;
 
         font-family: "Noto Sans Mono";
         font-size: 0;

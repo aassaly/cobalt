@@ -4,7 +4,6 @@
     import { t } from "$lib/i18n/translations";
     import { defaultNavPage } from "$lib/subnav";
 
-    import CobaltLogo from "$components/sidebar/CobaltLogo.svelte";
     import SidebarTab from "$components/sidebar/SidebarTab.svelte";
 
     import IconDownload from "@tabler/icons-svelte/IconDownload.svelte";
@@ -12,23 +11,18 @@
 
     import IconRepeat from "@tabler/icons-svelte/IconRepeat.svelte";
 
-    import IconComet from "@tabler/icons-svelte/IconComet.svelte";
-    import IconHeart from "@tabler/icons-svelte/IconHeart.svelte";
-    import IconInfoCircle from "@tabler/icons-svelte/IconInfoCircle.svelte";
 
     let screenWidth: number;
     let settingsLink = defaultNavPage("settings");
-    let aboutLink = defaultNavPage("about");
 
     $: screenWidth,
-        (settingsLink = defaultNavPage("settings")),
-        (aboutLink = defaultNavPage("about"));
+        (settingsLink = defaultNavPage("settings"));
 </script>
 
 <svelte:window bind:innerWidth={screenWidth} />
 
 <nav id="sidebar" aria-label={$t("a11y.tabs.tab_panel")}>
-    <CobaltLogo />
+    <a class="fetch-logo" href="/" aria-label="Fetch home">F</a>
     <div id="sidebar-tabs" role="tablist">
         <div id="sidebar-actions" class="sidebar-inner-container">
             <SidebarTab name="save" path="/" icon={IconDownload} />
@@ -38,9 +32,6 @@
         </div>
         <div id="sidebar-info" class="sidebar-inner-container">
             <SidebarTab name="settings" path={settingsLink} icon={IconSettings} />
-            <SidebarTab name="donate" path="/donate" icon={IconHeart} />
-            <SidebarTab name="updates" path="/updates" icon={IconComet} />
-            <SidebarTab name="about" path={aboutLink} icon={IconInfoCircle} />
         </div>
     </div>
 </nav>
@@ -51,6 +42,19 @@
     .sidebar-inner-container {
         display: flex;
         flex-direction: column;
+    }
+
+    .fetch-logo {
+        display: grid;
+        place-items: center;
+        margin: 12px;
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: var(--secondary);
+        color: var(--background);
+        font-weight: 700;
+        text-decoration: none;
     }
 
     #sidebar {

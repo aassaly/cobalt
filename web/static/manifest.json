@@ -1,67 +1,8 @@
 {
-    "name": "cobalt",
-    "short_name": "cobalt",
+    "name": "Fetch",
+    "short_name": "Fetch",
     "start_url": "/",
-    "icons": [
-        {
-            "src": "/icons/android-chrome-192x192.png",
-            "sizes": "192x192",
-            "type": "image/png"
-        },
-        {
-            "src": "/icons/android-chrome-512x512.png",
-            "sizes": "512x512",
-            "type": "image/png"
-        },
-        {
-            "src": "/icons/generic.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "/icons/maskable/48.png",
-            "sizes": "48x48",
-            "type": "image/png",
-            "purpose": "maskable"
-        },
-        {
-            "src": "/icons/maskable/72.png",
-            "sizes": "72x72",
-            "type": "image/png",
-            "purpose": "maskable"
-        },
-        {
-            "src": "/icons/maskable/96.png",
-            "sizes": "96x96",
-            "type": "image/png",
-            "purpose": "maskable"
-        },
-        {
-            "src": "/icons/maskable/128.png",
-            "sizes": "128x128",
-            "type": "image/png",
-            "purpose": "maskable"
-        },
-        {
-            "src": "/icons/maskable/192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "maskable"
-        },
-        {
-            "src": "/icons/maskable/384.png",
-            "sizes": "384x384",
-            "type": "image/png",
-            "purpose": "maskable"
-        },
-        {
-            "src": "/icons/maskable/512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "maskable"
-        }
-    ],
+    "icons": [{ "src": "/fetch.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }],
     "share_target": {
         "method": "GET",
         "action": "/",

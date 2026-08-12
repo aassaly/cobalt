@@ -12,6 +12,10 @@ them, you must specify them when building the frontend (or running a vite server
 
 `WEB_DEFAULT_API` is **required** to run cobalt frontend.
 
+This fork also requires `WEB_YTDLP_API`, the same-origin URL of the private
+hybrid yt-dlp gateway. The modified non-commercial frontend must be deployed
+without upstream Cobalt branding or mascot assets as required by this license.
+
 | name                            | example                     | description                                                                                             |
 |:--------------------------------|:----------------------------|:--------------------------------------------------------------------------------------------------------|
 | `WEB_HOST`                      | `cobalt.tools`              | domain on which the frontend will be running. used for meta tags and configuring plausible.             |

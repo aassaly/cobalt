@@ -14,7 +14,6 @@
     import IconBrandTwitter from "@tabler/icons-svelte/IconBrandTwitter.svelte";
     import IconMoodSmileBeam from "@tabler/icons-svelte/IconMoodSmileBeam.svelte";
 
-    import CobaltQr from "$components/icons/CobaltQR.svelte";
     import CopyIcon from "$components/misc/CopyIcon.svelte";
 
     const cobaltUrl = "https://cobalt.tools/";
@@ -45,7 +44,7 @@
                 `a11y.donate.share.qr.${expanded ? "collapse" : "expand"}`
             )}
         >
-            <CobaltQr />
+        <div class="qr-placeholder" aria-hidden="true">↗</div>
         </button>
         <div id="action-buttons">
             <button
