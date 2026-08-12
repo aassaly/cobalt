@@ -3,6 +3,7 @@
     import { t } from "$lib/i18n/translations";
     import { hapticSwitch } from "$lib/haptics";
     import { savingHandler } from "$lib/api/saving-handler";
+    import { startYtDlp, useYtDlp } from "$lib/hybrid/api";
     import { downloadButtonState } from "$lib/state/omnibox";
 
     import type { CobaltDownloadButtonState } from "$lib/types/omnibox";
@@ -54,9 +55,13 @@
 <button
     id="download-button"
     {disabled}
-    on:click={() => {
+    on:click={async () => {
         hapticSwitch();
-        savingHandler({ url });
+        if (useYtDlp(url)) {
+            await startYtDlp(url).catch((error) => alert(error.message));
+        } else {
+            savingHandler({ url });
+        }
     }}
     aria-label={buttonAltText}
 >

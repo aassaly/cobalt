@@ -15,6 +15,7 @@
     import { savingHandler } from "$lib/api/saving-handler";
     import { pasteLinkFromClipboard } from "$lib/clipboard";
     import { turnstileEnabled, turnstileSolved } from "$lib/state/turnstile";
+    import { hybridSettings, lastBackendCommand } from "$lib/hybrid/settings";
 
     import type { Optional } from "$lib/types/generic";
     import type { DownloadModeOption } from "$lib/types/settings";
@@ -198,6 +199,19 @@
     </div>
 
     <div id="action-container">
+        <select
+            class="processor-select"
+            value={$hybridSettings.processor}
+            onchange={(event) => hybridSettings.update((value) => ({
+                ...value,
+                processor: (event.currentTarget as HTMLSelectElement).value as "automatic" | "cobalt" | "yt-dlp",
+            }))}
+            aria-label="Download processor"
+        >
+            <option value="automatic">automatic</option>
+            <option value="cobalt">cobalt</option>
+            <option value="yt-dlp">yt-dlp</option>
+        </select>
         <Switcher>
             <SettingsButton
                 settingContext="save"
@@ -231,6 +245,12 @@
             <span id="paste-mobile-text">{$t("save.paste.long")}</span>
         </ActionButton>
     </div>
+    {#if $lastBackendCommand}
+        <div class="backend-command">
+            <strong>backend command</strong>
+            <code>{$lastBackendCommand}</code>
+        </div>
+    {/if}
 </div>
 
 <style>
@@ -241,6 +261,29 @@
         width: 100%;
         gap: 6px;
         position: relative;
+    }
+
+    .processor-select {
+        border: 0;
+        border-radius: var(--border-radius);
+        padding: 8px 12px;
+        color: var(--secondary);
+        background: var(--button);
+        box-shadow: var(--button-box-shadow);
+    }
+
+    .backend-command {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        color: var(--gray);
+        font-size: 11px;
+        overflow-wrap: anywhere;
+    }
+
+    .backend-command code {
+        color: var(--secondary);
+        white-space: pre-wrap;
     }
 
     #input-container {
