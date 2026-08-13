@@ -87,9 +87,7 @@
     <label>Proof-of-origin provider
         <select bind:value={$hybridSettings.provider}>
             <option value="disabled">Disabled (plain yt-dlp)</option>
-            <option value="automatic">Automatic BgUtils</option>
-            <option value="bgutil">BgUtils</option>
-            <option value="wpc">WPC browser plugin</option>
+            <option value="automatic">Automatic installed providers</option>
             <option value="manual">Manual token</option>
         </select>
     </label>
