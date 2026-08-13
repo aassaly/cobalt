@@ -16,6 +16,14 @@ This fork also requires `WEB_YTDLP_API`, the same-origin URL of the private
 hybrid yt-dlp gateway. The modified non-commercial frontend must be deployed
 without upstream Cobalt branding or mascot assets as required by this license.
 
+The private gateway integration keeps extractor-specific controls isolated:
+YouTube cookies and PO-token options are sent only for YouTube jobs, while
+TikTok identity overrides are sent only for TikTok jobs. Common settings are
+limited to quality, supported impersonation targets, and subtitles. Saved and
+per-download advanced arguments are separate, and the latter clears after a
+job starts. Every yt-dlp process launched for a job is displayed with its exact
+command, live output, exit code, and outcome.
+
 | name                            | example                     | description                                                                                             |
 |:--------------------------------|:----------------------------|:--------------------------------------------------------------------------------------------------------|
 | `WEB_HOST`                      | `cobalt.tools`              | domain on which the frontend will be running. used for meta tags and configuring plausible.             |

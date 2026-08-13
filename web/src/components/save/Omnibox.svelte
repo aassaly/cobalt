@@ -15,7 +15,8 @@
     import { savingHandler } from "$lib/api/saving-handler";
     import { pasteLinkFromClipboard } from "$lib/clipboard";
     import { turnstileEnabled, turnstileSolved } from "$lib/state/turnstile";
-    import { hybridSettings, lastBackendCommand } from "$lib/hybrid/settings";
+    import { hybridSettings, lastBackendCommands, perDownloadArguments } from "$lib/hybrid/settings";
+    import { useYtDlp } from "$lib/hybrid/api";
 
     import type { Optional } from "$lib/types/generic";
     import type { DownloadModeOption } from "$lib/types/settings";
@@ -48,16 +49,18 @@
     let isLoading = $state(false);
 
     let isHovered = $state(false);
-    let commandCopyStatus = $state<"idle" | "copied" | "failed">("idle");
+    let copiedAttempt = $state<number | null>(null);
+    let copyFailed = $state<number | null>(null);
 
-    const copyBackendCommand = async () => {
+    const copyBackendCommand = async (command: string, index: number) => {
         try {
-            await navigator.clipboard.writeText($lastBackendCommand);
-            commandCopyStatus = "copied";
+            await navigator.clipboard.writeText(command);
+            copiedAttempt = index;
+            copyFailed = null;
         } catch {
-            commandCopyStatus = "failed";
+            copyFailed = index;
         }
-        setTimeout(() => commandCopyStatus = "idle", 2000);
+        setTimeout(() => copiedAttempt = null, 2000);
     };
 
     let isBotCheckOngoing = $derived($turnstileEnabled && !$turnstileSolved);
@@ -257,25 +260,28 @@
             <span id="paste-mobile-text">{$t("save.paste.long")}</span>
         </ActionButton>
     </div>
-    {#if $lastBackendCommand}
+    {#if useYtDlp($link)}
+        <label class="per-download-arguments">
+            <span>advanced arguments for this download</span>
+            <textarea bind:value={$perDownloadArguments} rows="3" spellcheck="false" placeholder="Optional yt-dlp arguments for this URL only"></textarea>
+        </label>
+    {/if}
+    {#if $lastBackendCommands.length}
         <div class="backend-command">
-            <div class="backend-command-heading">
-                <strong>backend command</strong>
-                <button
-                    type="button"
-                    class="copy-command"
-                    onclick={copyBackendCommand}
-                    aria-label={commandCopyStatus === "copied" ? $t("button.copied") : $t("button.copy")}
-                    title={commandCopyStatus === "copied" ? $t("button.copied") : $t("button.copy")}
-                >
-                    <CopyIcon check={commandCopyStatus === "copied"} regularIcon={true} />
-                    <span>{commandCopyStatus === "copied" ? $t("button.copied") : $t("button.copy")}</span>
-                </button>
-            </div>
-            <code>{$lastBackendCommand}</code>
-            {#if commandCopyStatus === "failed"}
-                <span class="copy-status" role="status">copy failed; select the command text manually</span>
-            {/if}
+            {#each $lastBackendCommands as attempt, index}
+                <section class="backend-attempt">
+                    <div class="backend-command-heading">
+                        <strong>yt-dlp attempt {index + 1}: {attempt.state}</strong>
+                        <button type="button" class="copy-command" onclick={() => copyBackendCommand(attempt.command, index)}>
+                            <CopyIcon check={copiedAttempt === index} regularIcon={true} />
+                            <span>{copiedAttempt === index ? $t("button.copied") : $t("button.copy")}</span>
+                        </button>
+                    </div>
+                    <code>{attempt.command}</code>
+                    {#if attempt.output}<pre>{attempt.output}</pre>{/if}
+                    {#if copyFailed === index}<span class="copy-status" role="status">copy failed; select the command text manually</span>{/if}
+                </section>
+            {/each}
         </div>
     {/if}
 </div>
@@ -307,6 +313,11 @@
         font-size: 11px;
         overflow-wrap: anywhere;
     }
+    .backend-attempt { display: flex; flex-direction: column; gap: 6px; }
+    .backend-attempt + .backend-attempt { border-top: 1px solid var(--button); padding-top: 10px; }
+    .backend-attempt pre { max-height: 16rem; overflow: auto; white-space: pre-wrap; user-select: text; }
+    .per-download-arguments { display: flex; flex-direction: column; gap: 5px; color: var(--secondary); }
+    .per-download-arguments textarea { border: 0; border-radius: var(--border-radius); padding: 10px; color: var(--secondary); background: var(--button); font-family: "IBM Plex Mono", monospace; }
 
     .backend-command code {
         color: var(--secondary);
