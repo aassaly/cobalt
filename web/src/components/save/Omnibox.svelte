@@ -33,6 +33,7 @@
     import IconMusic from "$components/icons/Music.svelte";
     import IconSparkles from "$components/icons/Sparkles.svelte";
     import IconClipboard from "$components/icons/Clipboard.svelte";
+    import CopyIcon from "$components/misc/CopyIcon.svelte";
 
     let linkInput: Optional<HTMLInputElement>;
 
@@ -47,6 +48,17 @@
     let isLoading = $state(false);
 
     let isHovered = $state(false);
+    let commandCopyStatus = $state<"idle" | "copied" | "failed">("idle");
+
+    const copyBackendCommand = async () => {
+        try {
+            await navigator.clipboard.writeText($lastBackendCommand);
+            commandCopyStatus = "copied";
+        } catch {
+            commandCopyStatus = "failed";
+        }
+        setTimeout(() => commandCopyStatus = "idle", 2000);
+    };
 
     let isBotCheckOngoing = $derived($turnstileEnabled && !$turnstileSolved);
 
@@ -247,8 +259,23 @@
     </div>
     {#if $lastBackendCommand}
         <div class="backend-command">
-            <strong>backend command</strong>
+            <div class="backend-command-heading">
+                <strong>backend command</strong>
+                <button
+                    type="button"
+                    class="copy-command"
+                    onclick={copyBackendCommand}
+                    aria-label={commandCopyStatus === "copied" ? $t("button.copied") : $t("button.copy")}
+                    title={commandCopyStatus === "copied" ? $t("button.copied") : $t("button.copy")}
+                >
+                    <CopyIcon check={commandCopyStatus === "copied"} regularIcon={true} />
+                    <span>{commandCopyStatus === "copied" ? $t("button.copied") : $t("button.copy")}</span>
+                </button>
+            </div>
             <code>{$lastBackendCommand}</code>
+            {#if commandCopyStatus === "failed"}
+                <span class="copy-status" role="status">copy failed; select the command text manually</span>
+            {/if}
         </div>
     {/if}
 </div>
@@ -284,6 +311,42 @@
     .backend-command code {
         color: var(--secondary);
         white-space: pre-wrap;
+        cursor: text;
+        user-select: text;
+        -webkit-user-select: text;
+    }
+
+    .backend-command-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .copy-command {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        border: 0;
+        border-radius: var(--border-radius);
+        padding: 4px 8px;
+        color: var(--secondary);
+        background: var(--button);
+        cursor: pointer;
+    }
+
+    .copy-command:focus-visible {
+        outline: 2px solid var(--secondary);
+        outline-offset: 2px;
+    }
+
+    .copy-command :global(.copy-animation) {
+        width: 14px;
+        height: 14px;
+    }
+
+    .copy-status {
+        color: var(--error);
     }
 
     #input-container {
