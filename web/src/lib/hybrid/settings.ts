@@ -14,8 +14,6 @@ export type HybridSettings = {
     potTrace: boolean;
     manualPoTokens: string;
     typedOptions: Record<string, boolean | string | string[]>;
-    tiktokDeviceId: string;
-    tiktokAppInfo: string;
 };
 
 export type YtDlpAttempt = {
@@ -23,6 +21,11 @@ export type YtDlpAttempt = {
     output: string;
     returncode: number | null;
     state: "pending" | "running" | "succeeded" | "failed";
+};
+
+export type TikTokIdentity = {
+    deviceId: string;
+    appInfo: string;
 };
 
 const defaults: HybridSettings = {
@@ -35,8 +38,6 @@ const defaults: HybridSettings = {
     potTrace: false,
     manualPoTokens: "",
     typedOptions: {},
-    tiktokDeviceId: "",
-    tiktokAppInfo: "",
 };
 
 const load = (): HybridSettings => {
@@ -59,6 +60,7 @@ const load = (): HybridSettings => {
 export const hybridSettings = writable<HybridSettings>(load());
 export const perDownloadArguments = writable("");
 export const lastBackendCommands = writable<YtDlpAttempt[]>([]);
+export const tiktokIdentity = writable<TikTokIdentity>({ deviceId: "", appInfo: "" });
 export const lastYtDlpJob = writable("");
 
 if (browser) {

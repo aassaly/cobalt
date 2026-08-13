@@ -2,7 +2,7 @@ import env from "$lib/env";
 import { get } from "svelte/store";
 import { downloadFile } from "$lib/download";
 import { downloadButtonState } from "$lib/state/omnibox";
-import { hybridSettings, lastBackendCommands, lastYtDlpJob, perDownloadArguments } from "$lib/hybrid/settings";
+import { hybridSettings, lastBackendCommands, lastYtDlpJob, perDownloadArguments, tiktokIdentity } from "$lib/hybrid/settings";
 
 const cobaltHosts = [
     /(^|\.)youtube\.com$/i, /(^|\.)youtu\.be$/i,
@@ -28,6 +28,7 @@ export const useYtDlp = (url: string) => {
 
 export const startYtDlp = async (url: string) => {
     const settings = get(hybridSettings);
+    const identity = get(tiktokIdentity);
     downloadButtonState.set("think");
     const response = await fetch(`${env.YTDLP_API}/api/jobs`, {
         method: "POST",
@@ -42,8 +43,8 @@ export const startYtDlp = async (url: string) => {
             fetchPot: settings.fetchPot,
             potTrace: settings.potTrace,
             manualPoTokens: settings.manualPoTokens || null,
-            tiktokDeviceId: settings.tiktokDeviceId || null,
-            tiktokAppInfo: settings.tiktokAppInfo || null,
+            tiktokDeviceId: identity.deviceId || null,
+            tiktokAppInfo: identity.appInfo || null,
             typedOptions: settings.typedOptions,
         }),
     });

@@ -23,6 +23,10 @@ limited to quality, supported impersonation targets, and subtitles. Saved and
 per-download advanced arguments are separate, and the latter clears after a
 job starts. Every yt-dlp process launched for a job is displayed with its exact
 command, live output, exit code, and outcome.
+The settings page reads the default TikTok identity at runtime from the
+Authentik-protected gateway; the static build does not contain those values.
+Cookie-profile uploads display the gateway's structural validation error rather
+than replacing it with a generic failure.
 
 | name                            | example                     | description                                                                                             |
 |:--------------------------------|:----------------------------|:--------------------------------------------------------------------------------------------------------|
