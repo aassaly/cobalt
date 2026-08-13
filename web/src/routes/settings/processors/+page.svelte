@@ -1,7 +1,7 @@
 <script lang="ts">
     import env from "$lib/env";
     import { onMount } from "svelte";
-    import { hybridSettings } from "$lib/hybrid/settings";
+    import { hybridSettings, tiktokIdentity } from "$lib/hybrid/settings";
 
     type Choice = { value: string; label: string };
     type Option = { id: string; flags: string[]; control: string; label: string; tooltip: string; values?: Choice[]; values_from?: string };
@@ -20,6 +20,8 @@
         profiles = cookies.profiles || [];
         capabilities = await fetch(`${env.YTDLP_API}/api/capabilities`).then((r) => r.json());
         catalog = await fetch(`${env.YTDLP_API}/api/settings/catalog`).then((r) => r.json());
+        const identityResponse = await fetch(`${env.YTDLP_API}/api/settings/tiktok-identity`);
+        if (identityResponse.ok) tiktokIdentity.set(await identityResponse.json());
     };
 
     const choices = (option: Option) => option.values_from === "impersonationTargets"
@@ -36,7 +38,8 @@
         const data = new FormData();
         data.append("file", cookieFile);
         const response = await fetch(`${env.YTDLP_API}/api/cookies/${encodeURIComponent(profileName)}`, { method: "POST", body: data });
-        message = response.ok ? "Cookie profile stored." : "Cookie profile upload failed.";
+        const result = await response.json().catch(() => ({}));
+        message = response.ok ? "Cookie profile stored." : (result.detail || `Cookie profile upload failed (${response.status}).`);
         await refresh();
     };
 
@@ -116,8 +119,8 @@
 <section>
     <h2>TikTok mobile identity</h2>
     <p>The protected server identity is used automatically for TikTok only. Define both fields to override it for future downloads.</p>
-    <label>Device ID<input bind:value={$hybridSettings.tiktokDeviceId} inputmode="numeric" autocomplete="off" /></label>
-    <label>App info<input bind:value={$hybridSettings.tiktokAppInfo} autocomplete="off" placeholder="install_id/app_name/app_version/manifest_version/aid" /></label>
+    <label>Device ID<input bind:value={$tiktokIdentity.deviceId} inputmode="numeric" autocomplete="off" /></label>
+    <label>App info<input bind:value={$tiktokIdentity.appInfo} autocomplete="off" placeholder="install_id/app_name/app_version/manifest_version/aid" /></label>
 </section>
 
 <section>
