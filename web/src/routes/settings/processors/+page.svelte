@@ -27,7 +27,7 @@
         { id: "subtitles", label: "Subtitles", description: "Download human-created or automatic subtitles and optionally embed them in a compatible output container.", options: [
             { id: "write_subs", flags: ["--write-subs"], control: "boolean", label: "Download subtitles", tooltip: "Downloads subtitles supplied by the publisher." },
             { id: "write_auto_subs", flags: ["--write-auto-subs"], control: "boolean", label: "Include automatic subtitles", tooltip: "Also downloads automatically generated captions when available." },
-            { id: "sub_langs", flags: ["--sub-langs"], control: "select", label: "Languages", tooltip: "Select common language sets. Use advanced arguments for another yt-dlp language expression.", values: [{ value: "", label: "Site default" }, { value: "en", label: "English" }, { value: "fr", label: "French" }, { value: "en,fr", label: "English and French" }, { value: "all", label: "All available" }] },
+            { id: "sub_langs", flags: ["--sub-langs"], control: "select", label: "Languages", tooltip: "Select common language sets. Edit the generated command for another yt-dlp language expression.", values: [{ value: "", label: "Site default" }, { value: "en", label: "English" }, { value: "fr", label: "French" }, { value: "en,fr", label: "English and French" }, { value: "all", label: "All available" }] },
             { id: "sub_format", flags: ["--sub-format"], control: "select", label: "Subtitle format", tooltip: "Preferred subtitle file format; yt-dlp falls back when the site does not provide it.", values: [{ value: "", label: "Best available" }, { value: "vtt", label: "WebVTT" }, { value: "srt", label: "SubRip (SRT)" }, { value: "ass", label: "ASS" }, { value: "lrc", label: "LRC" }] },
             { id: "embed_subs", flags: ["--embed-subs"], control: "boolean", label: "Embed subtitles", tooltip: "Embeds downloaded subtitles when the selected media container supports them." },
         ] },
@@ -149,9 +149,8 @@
 </section>
 
 <section>
-    <h2>Advanced yt-dlp arguments</h2>
-    <p>Saved arguments are appended to every yt-dlp job. A second advanced field on the download page applies only to that URL. Output paths and config locations remain server-controlled.</p>
-    <textarea rows="6" bind:value={$hybridSettings.globalArguments} spellcheck="false" placeholder={'Optional saved arguments, for example:\n--write-thumbnail'}></textarea>
+    <h2>Runtime</h2>
+    <p>The complete command generated from these defaults is editable on the download page before execution.</p>
     {#if capabilities.ytDlpVersion}<small>OVH yt-dlp {capabilities.ytDlpVersion}</small>{/if}
 </section>
 

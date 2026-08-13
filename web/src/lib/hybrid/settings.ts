@@ -6,7 +6,6 @@ export type PoTokenProvider = "automatic" | "manual" | "disabled";
 
 export type HybridSettings = {
     processor: Processor;
-    globalArguments: string;
     provider: PoTokenProvider;
     youtubeCookieProfile: string;
     playerClient: string;
@@ -28,9 +27,10 @@ export type TikTokIdentity = {
     appInfo: string;
 };
 
+export type CommandSuggestion = { label: string; command: string };
+
 const defaults: HybridSettings = {
     processor: "automatic",
-    globalArguments: "",
     provider: "disabled",
     youtubeCookieProfile: "",
     playerClient: "",
@@ -47,7 +47,6 @@ const load = (): HybridSettings => {
         return {
             ...defaults,
             ...stored,
-            globalArguments: stored.globalArguments ?? stored.rawArguments ?? "",
             youtubeCookieProfile: stored.youtubeCookieProfile ?? stored.cookieProfile ?? "",
             playerClient: stored.playerClient === "mweb" && stored.provider === "automatic" ? "" : (stored.playerClient ?? ""),
             provider: stored.provider === "automatic" ? "disabled" : (stored.provider ?? "disabled"),
@@ -58,7 +57,8 @@ const load = (): HybridSettings => {
 };
 
 export const hybridSettings = writable<HybridSettings>(load());
-export const perDownloadArguments = writable("");
+export const editableCommand = writable("");
+export const commandSuggestions = writable<CommandSuggestion[]>([]);
 export const lastBackendCommands = writable<YtDlpAttempt[]>([]);
 export const tiktokIdentity = writable<TikTokIdentity>({ deviceId: "", appInfo: "" });
 export const lastYtDlpJob = writable("");
