@@ -19,14 +19,18 @@ without upstream Cobalt branding or mascot assets as required by this license.
 The private gateway integration keeps extractor-specific controls isolated:
 YouTube cookies and PO-token options are sent only for YouTube jobs, while
 TikTok identity overrides are sent only for TikTok jobs. Common settings are
-limited to quality, supported impersonation targets, and subtitles. Saved and
+limited to quality, release-pinned impersonation targets, and subtitles. The
+known catalog and capabilities are compiled into the frontend so the complete
+settings page renders immediately; runtime capability probes are diagnostic,
+not a page-load dependency. Saved and
 per-download advanced arguments are separate, and the latter clears after a
 job starts. Every yt-dlp process launched for a job is displayed with its exact
 command, live output, exit code, and outcome.
 The settings page reads the default TikTok identity at runtime from the
 Authentik-protected gateway; the static build does not contain those values.
 Cookie-profile uploads display the gateway's structural validation error rather
-than replacing it with a generic failure.
+than replacing it with a generic failure. The gateway normalizes lowercase
+Netscape booleans and fractional expiry seconds from browser exporters.
 
 | name                            | example                     | description                                                                                             |
 |:--------------------------------|:----------------------------|:--------------------------------------------------------------------------------------------------------|

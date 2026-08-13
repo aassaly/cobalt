@@ -8,19 +8,44 @@
     type Group = { id: string; label: string; description: string; options: Option[] };
     type Capabilities = { ytDlpVersion?: string; impersonationTargets?: Choice[]; poTokenProviders?: string[] };
 
+    const knownTargets = `Chrome-133:Macos-15 Chrome-136:Macos-15 Safari-17.2:Ios-17.2 Safari-18.0:Ios-18.0 Safari-18.4:Ios-18.4 Safari-26.0:Ios-26.0 Chrome-99:Android-12 Chrome-131:Android-14 Tor-14.5:Macos-14 Edge-99:Windows-10 Edge-101:Windows-10 Firefox-133:Macos-14 Firefox-135:Macos-14 Firefox-144:Macos-26 Firefox-147:Macos-26 Safari-15.3:Macos-11 Safari-15.5:Macos-12 Safari-17.0:Macos-14 Safari-18.0:Macos-15 Safari-18.4:Macos-15 Safari-26.0:Macos-26 Safari-26.0.1:Macos-26 Chrome-99:Windows-10 Chrome-100:Windows-10 Chrome-101:Windows-10 Chrome-104:Windows-10 Chrome-107:Windows-10 Chrome-110:Windows-10 Chrome-116:Windows-10 Chrome-119:Macos-14 Chrome-120:Macos-14 Chrome-123:Macos-14 Chrome-124:Macos-14 Chrome-131:Macos-14 Chrome-142:Macos-26 Chrome-145:Macos-26 Chrome-146:Macos-26`
+        .split(" ").map((value) => {
+            const [client, os] = value.split(":");
+            return { value, label: `${client} on ${os} (curl_cffi)` };
+        });
+
+    const knownCatalog: { groups: Group[] } = { groups: [
+        { id: "format", label: "Format and quality", description: "Choose a common download goal. yt-dlp still selects the best compatible streams within that goal.", options: [
+            { id: "format", flags: ["--format"], control: "select", label: "Quality", tooltip: "Best available downloads the highest-quality video and audio. Video-only and audio-only omit the other stream.", values: [
+                { value: "", label: "Best available" }, { value: "bestvideo*+bestaudio/best", label: "Best video and audio" },
+                { value: "bestvideo", label: "Video only" }, { value: "bestaudio", label: "Audio only" },
+            ] },
+        ] },
+        { id: "network", label: "Browser impersonation", description: "Use only when a site treats the server's normal HTTP client differently from a browser.", options: [
+            { id: "impersonate", flags: ["--impersonate"], control: "dynamic-select", label: "Impersonate", tooltip: "Choose one of the impersonation targets installed with this Fetch release. Default lets yt-dlp decide.", values_from: "impersonationTargets" },
+        ] },
+        { id: "subtitles", label: "Subtitles", description: "Download human-created or automatic subtitles and optionally embed them in a compatible output container.", options: [
+            { id: "write_subs", flags: ["--write-subs"], control: "boolean", label: "Download subtitles", tooltip: "Downloads subtitles supplied by the publisher." },
+            { id: "write_auto_subs", flags: ["--write-auto-subs"], control: "boolean", label: "Include automatic subtitles", tooltip: "Also downloads automatically generated captions when available." },
+            { id: "sub_langs", flags: ["--sub-langs"], control: "select", label: "Languages", tooltip: "Select common language sets. Use advanced arguments for another yt-dlp language expression.", values: [{ value: "", label: "Site default" }, { value: "en", label: "English" }, { value: "fr", label: "French" }, { value: "en,fr", label: "English and French" }, { value: "all", label: "All available" }] },
+            { id: "sub_format", flags: ["--sub-format"], control: "select", label: "Subtitle format", tooltip: "Preferred subtitle file format; yt-dlp falls back when the site does not provide it.", values: [{ value: "", label: "Best available" }, { value: "vtt", label: "WebVTT" }, { value: "srt", label: "SubRip (SRT)" }, { value: "ass", label: "ASS" }, { value: "lrc", label: "LRC" }] },
+            { id: "embed_subs", flags: ["--embed-subs"], control: "boolean", label: "Embed subtitles", tooltip: "Embeds downloaded subtitles when the selected media container supports them." },
+        ] },
+    ] };
+
     let profiles: string[] = [];
     let profileName = "youtube";
     let cookieFile: File | undefined;
-    let capabilities: Capabilities = {};
-    let catalog: { groups?: Group[] } = {};
+    const capabilities: Capabilities = { ytDlpVersion: "2026.07.04", impersonationTargets: knownTargets };
+    const catalog = knownCatalog;
     let message = "";
 
     const refresh = async () => {
-        const cookies = await fetch(`${env.YTDLP_API}/api/cookies`).then((r) => r.json());
-        profiles = cookies.profiles || [];
-        capabilities = await fetch(`${env.YTDLP_API}/api/capabilities`).then((r) => r.json());
-        catalog = await fetch(`${env.YTDLP_API}/api/settings/catalog`).then((r) => r.json());
-        const identityResponse = await fetch(`${env.YTDLP_API}/api/settings/tiktok-identity`);
+        const [cookiesResponse, identityResponse] = await Promise.all([
+            fetch(`${env.YTDLP_API}/api/cookies`),
+            fetch(`${env.YTDLP_API}/api/settings/tiktok-identity`),
+        ]);
+        if (cookiesResponse.ok) profiles = (await cookiesResponse.json()).profiles || [];
         if (identityResponse.ok) tiktokIdentity.set(await identityResponse.json());
     };
 
