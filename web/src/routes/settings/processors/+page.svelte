@@ -3,11 +3,16 @@
     import { onMount } from "svelte";
     import { hybridSettings } from "$lib/hybrid/settings";
 
+    type Choice = { value: string; label: string };
+    type Option = { id: string; flags: string[]; control: string; label: string; tooltip: string; values?: Choice[]; values_from?: string };
+    type Group = { id: string; label: string; description: string; options: Option[] };
+    type Capabilities = { ytDlpVersion?: string; impersonationTargets?: Choice[]; poTokenProviders?: string[] };
+
     let profiles: string[] = [];
     let profileName = "youtube";
     let cookieFile: File | undefined;
-    let capabilities: Record<string, unknown> | undefined;
-    let catalog: { groups?: Array<{ id: string; label: string; options: Array<{ id: string; flags: string[]; control: string }> }> } = {};
+    let capabilities: Capabilities = {};
+    let catalog: { groups?: Group[] } = {};
     let message = "";
 
     const refresh = async () => {
@@ -17,21 +22,27 @@
         catalog = await fetch(`${env.YTDLP_API}/api/settings/catalog`).then((r) => r.json());
     };
 
+    const choices = (option: Option) => option.values_from === "impersonationTargets"
+        ? [{ value: "", label: "Default (let yt-dlp decide)" }, ...(capabilities.impersonationTargets || [])]
+        : (option.values || []);
+
+    const setTyped = (id: string, value: boolean | string) => hybridSettings.update((settings) => ({
+        ...settings,
+        typedOptions: { ...settings.typedOptions, [id]: value },
+    }));
+
     const uploadCookies = async () => {
         if (!cookieFile || !profileName) return;
         const data = new FormData();
         data.append("file", cookieFile);
-        const response = await fetch(`${env.YTDLP_API}/api/cookies/${encodeURIComponent(profileName)}`, {
-            method: "POST",
-            body: data,
-        });
+        const response = await fetch(`${env.YTDLP_API}/api/cookies/${encodeURIComponent(profileName)}`, { method: "POST", body: data });
         message = response.ok ? "Cookie profile stored." : "Cookie profile upload failed.";
         await refresh();
     };
 
     const removeCookies = async (name: string) => {
         await fetch(`${env.YTDLP_API}/api/cookies/${encodeURIComponent(name)}`, { method: "DELETE" });
-        hybridSettings.update((value) => ({ ...value, cookieProfile: value.cookieProfile === name ? "" : value.cookieProfile }));
+        hybridSettings.update((value) => ({ ...value, youtubeCookieProfile: value.youtubeCookieProfile === name ? "" : value.youtubeCookieProfile }));
         await refresh();
     };
 
@@ -49,94 +60,82 @@
     </label>
 </section>
 
-<section>
-    <h2>yt-dlp arguments</h2>
-    <p>These arguments are passed directly to yt-dlp. The service appends its controlled output target and source URL.</p>
-    <textarea rows="8" bind:value={$hybridSettings.rawArguments} spellcheck="false" placeholder={'--impersonate chrome\n--write-subs\n--embed-subs'}></textarea>
-</section>
-
 {#each catalog.groups || [] as group}
-    {#if !["youtube_proof_of_origin", "authentication"].includes(group.id)}
-        <section>
-            <h2>{group.label}</h2>
-            {#each group.options as option}
-                {#if option.id !== "raw_arguments" && option.flags.length}
-                    {#if option.control === "boolean"}
-                        <label class="inline">
-                            <input
-                                type="checkbox"
-                                checked={Boolean($hybridSettings.typedOptions[option.id])}
-                                onchange={(event) => hybridSettings.update((value) => ({ ...value, typedOptions: { ...value.typedOptions, [option.id]: (event.currentTarget as HTMLInputElement).checked } }))}
-                            />
-                            {option.flags.join(", ")}
-                        </label>
-                    {:else}
-                        <label>{option.flags.join(", ")}
-                            <input
-                                value={String($hybridSettings.typedOptions[option.id] || "")}
-                                onchange={(event) => hybridSettings.update((value) => ({ ...value, typedOptions: { ...value.typedOptions, [option.id]: (event.currentTarget as HTMLInputElement).value } }))}
-                                spellcheck="false"
-                            />
-                        </label>
-                    {/if}
-                {/if}
-            {/each}
-        </section>
-    {/if}
+    <section>
+        <h2>{group.label}</h2>
+        <p>{group.description}</p>
+        {#each group.options as option}
+            {#if option.control === "boolean"}
+                <label class="inline" title={option.tooltip}>
+                    <input type="checkbox" checked={Boolean($hybridSettings.typedOptions[option.id])} onchange={(event) => setTyped(option.id, (event.currentTarget as HTMLInputElement).checked)} />
+                    {option.label} <span class="help" aria-label={option.tooltip}>?</span>
+                </label>
+            {:else}
+                <label title={option.tooltip}>{option.label} <span class="help" aria-label={option.tooltip}>?</span>
+                    <select value={String($hybridSettings.typedOptions[option.id] || "")} onchange={(event) => setTyped(option.id, (event.currentTarget as HTMLSelectElement).value)}>
+                        {#each choices(option) as choice}<option value={choice.value}>{choice.label}</option>{/each}
+                    </select>
+                </label>
+            {/if}
+        {/each}
+    </section>
 {/each}
 
 <section>
-    <h2>YouTube proof of origin</h2>
-    <label>Provider
+    <h2>YouTube access</h2>
+    <p>These controls are added only to YouTube URLs. The default leaves client selection to yt-dlp.</p>
+    <label>Proof-of-origin provider
         <select bind:value={$hybridSettings.provider}>
-            <option value="automatic">Automatic: BgUtils, then WPC fallback</option>
+            <option value="disabled">Disabled (plain yt-dlp)</option>
+            <option value="automatic">Automatic BgUtils</option>
             <option value="bgutil">BgUtils</option>
-            <option value="wpc">WPC browser</option>
+            <option value="wpc">WPC browser plugin</option>
             <option value="manual">Manual token</option>
-            <option value="disabled">Disabled</option>
         </select>
     </label>
-    <label>Player client <input bind:value={$hybridSettings.playerClient} placeholder="mweb" /></label>
-    <label>Fetch policy
-        <select bind:value={$hybridSettings.fetchPot}>
-            <option value="auto">Auto</option>
-            <option value="always">Always</option>
-            <option value="never">Never</option>
-        </select>
-    </label>
-    <label class="inline"><input type="checkbox" bind:checked={$hybridSettings.potTrace} /> PO Token trace diagnostics</label>
-    {#if $hybridSettings.provider === "manual"}
-        <label>Manual tokens <textarea rows="3" bind:value={$hybridSettings.manualPoTokens}></textarea></label>
+    {#if $hybridSettings.provider !== "disabled"}
+        <label>Player client (optional)<input bind:value={$hybridSettings.playerClient} placeholder="Leave blank for yt-dlp default" /></label>
+        <label>Token fetch policy
+            <select bind:value={$hybridSettings.fetchPot}><option value="auto">Automatic</option><option value="always">Always</option><option value="never">Never</option></select>
+        </label>
+        <label class="inline"><input type="checkbox" bind:checked={$hybridSettings.potTrace} /> Token diagnostics</label>
+        {#if $hybridSettings.provider === "manual"}<label>Manual tokens<textarea rows="3" bind:value={$hybridSettings.manualPoTokens}></textarea></label>{/if}
     {/if}
-    {#if capabilities}
-        <pre>{JSON.stringify(capabilities, null, 2)}</pre>
-    {/if}
-</section>
-
-<section>
-    <h2>YouTube cookie profiles</h2>
-    <p>Import Netscape-format cookies for account-restricted media. Google credentials are never stored.</p>
-    <label>Active profile
-        <select bind:value={$hybridSettings.cookieProfile}>
+    <label>YouTube cookie profile
+        <select bind:value={$hybridSettings.youtubeCookieProfile}>
             <option value="">None</option>
             {#each profiles as profile}<option value={profile}>{profile}</option>{/each}
         </select>
     </label>
-    <label>Profile name <input bind:value={profileName} pattern="[A-Za-z0-9][A-Za-z0-9._-]*" maxlength="64" /></label>
+    <p>Use cookies only for account-restricted media. A dedicated account is safer because YouTube may restrict accounts used by downloaders.</p>
+    <label>Profile name<input bind:value={profileName} pattern="[A-Za-z0-9][A-Za-z0-9._-]*" maxlength="64" /></label>
     <input type="file" accept=".txt,text/plain" onchange={(event) => cookieFile = (event.currentTarget as HTMLInputElement).files?.[0]} />
-    <button onclick={uploadCookies}>Upload protected cookie profile</button>
-    {#each profiles as profile}
-        <button class="danger" onclick={() => removeCookies(profile)}>Delete {profile}</button>
-    {/each}
+    <button onclick={uploadCookies}>Upload Netscape cookie file</button>
+    {#each profiles as profile}<button class="danger" onclick={() => removeCookies(profile)}>Delete {profile}</button>{/each}
     {#if message}<p>{message}</p>{/if}
+</section>
+
+<section>
+    <h2>TikTok mobile identity</h2>
+    <p>The protected server identity is used automatically for TikTok only. Define both fields to override it for future downloads.</p>
+    <label>Device ID<input bind:value={$hybridSettings.tiktokDeviceId} inputmode="numeric" autocomplete="off" /></label>
+    <label>App info<input bind:value={$hybridSettings.tiktokAppInfo} autocomplete="off" placeholder="install_id/app_name/app_version/manifest_version/aid" /></label>
+</section>
+
+<section>
+    <h2>Advanced yt-dlp arguments</h2>
+    <p>Saved arguments are appended to every yt-dlp job. A second advanced field on the download page applies only to that URL. Output paths and config locations remain server-controlled.</p>
+    <textarea rows="6" bind:value={$hybridSettings.globalArguments} spellcheck="false" placeholder={'Optional saved arguments, for example:\n--write-thumbnail'}></textarea>
+    {#if capabilities.ytDlpVersion}<small>OVH yt-dlp {capabilities.ytDlpVersion}</small>{/if}
 </section>
 
 <style>
     section { display: flex; flex-direction: column; gap: 10px; padding: 14px; }
     label { display: flex; flex-direction: column; gap: 5px; color: var(--secondary); }
-    label.inline { flex-direction: row; }
-    textarea, input, select, button, pre { border: 0; border-radius: var(--border-radius); padding: 10px; color: var(--secondary); background: var(--button); box-shadow: var(--button-box-shadow); }
-    textarea, pre { font-family: "IBM Plex Mono", monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+    label.inline { flex-direction: row; align-items: center; }
+    textarea, input, select, button { border: 0; border-radius: var(--border-radius); padding: 10px; color: var(--secondary); background: var(--button); box-shadow: var(--button-box-shadow); }
+    textarea { font-family: "IBM Plex Mono", monospace; white-space: pre-wrap; }
     button { cursor: pointer; }
     button.danger { color: var(--red); }
+    .help { display: inline-flex; align-items: center; justify-content: center; width: 1.2rem; height: 1.2rem; border-radius: 50%; background: var(--button); cursor: help; }
 </style>

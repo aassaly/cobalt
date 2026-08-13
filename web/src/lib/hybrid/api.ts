@@ -2,7 +2,7 @@ import env from "$lib/env";
 import { get } from "svelte/store";
 import { downloadFile } from "$lib/download";
 import { downloadButtonState } from "$lib/state/omnibox";
-import { hybridSettings, lastBackendCommand, lastYtDlpJob } from "$lib/hybrid/settings";
+import { hybridSettings, lastBackendCommands, lastYtDlpJob, perDownloadArguments } from "$lib/hybrid/settings";
 
 const cobaltHosts = [
     /(^|\.)youtube\.com$/i, /(^|\.)youtu\.be$/i,
@@ -34,13 +34,16 @@ export const startYtDlp = async (url: string) => {
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
         body: JSON.stringify({
             url,
-            rawArguments: settings.rawArguments,
+            globalArguments: settings.globalArguments,
+            requestArguments: get(perDownloadArguments),
             provider: settings.provider,
-            cookieProfile: settings.cookieProfile || null,
+            youtubeCookieProfile: settings.youtubeCookieProfile || null,
             playerClient: settings.playerClient || null,
             fetchPot: settings.fetchPot,
             potTrace: settings.potTrace,
             manualPoTokens: settings.manualPoTokens || null,
+            tiktokDeviceId: settings.tiktokDeviceId || null,
+            tiktokAppInfo: settings.tiktokAppInfo || null,
             typedOptions: settings.typedOptions,
         }),
     });
@@ -50,7 +53,8 @@ export const startYtDlp = async (url: string) => {
         throw new Error(message.detail || "yt-dlp request failed");
     }
     const job = await response.json();
-    lastBackendCommand.set(job.command);
+    perDownloadArguments.set("");
+    lastBackendCommands.set((job.commands || []).map((command: string) => ({ command, output: "", returncode: null, state: "pending" })));
     lastYtDlpJob.set(job.id);
     const deadline = Date.now() + 15 * 60 * 1000;
     let status = job;
@@ -64,6 +68,7 @@ export const startYtDlp = async (url: string) => {
             throw new Error(message.detail || "unable to read yt-dlp job status");
         }
         status = await statusResponse.json();
+        lastBackendCommands.set(status.commands || []);
         if (status.state === "ready") break;
         if (status.state === "failed") {
             downloadButtonState.set("error");
