@@ -2,7 +2,7 @@ import { browser } from "$app/environment";
 import { writable } from "svelte/store";
 
 export type Processor = "automatic" | "cobalt" | "yt-dlp";
-export type PoTokenProvider = "automatic" | "bgutil" | "wpc" | "manual" | "disabled";
+export type PoTokenProvider = "automatic" | "manual" | "disabled";
 
 export type HybridSettings = {
     processor: Processor;
