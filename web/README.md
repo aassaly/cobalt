@@ -22,10 +22,11 @@ TikTok identity overrides are sent only for TikTok jobs. Common settings are
 limited to quality, release-pinned impersonation targets, and subtitles. The
 known catalog and capabilities are compiled into the frontend so the complete
 settings page renders immediately; runtime capability probes are diagnostic,
-not a page-load dependency. Saved and
-per-download advanced arguments are separate, and the latter clears after a
-job starts. Every yt-dlp process launched for a job is displayed with its exact
-command, live output, exit code, and outcome.
+not a page-load dependency. The complete command is generated from those
+settings before submission and remains directly editable. Each submission
+launches exactly one process and failed jobs offer complete, copyable command
+patterns for a manual next attempt. Normal copy shortcuts remain native; paste
+is intercepted only outside editable controls, where it replaces the source URL.
 The settings page reads the default TikTok identity at runtime from the
 Authentik-protected gateway; the static build does not contain those values.
 Cookie-profile uploads display the gateway's structural validation error rather

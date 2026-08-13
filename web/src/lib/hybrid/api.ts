@@ -2,7 +2,7 @@ import env from "$lib/env";
 import { get } from "svelte/store";
 import { downloadFile } from "$lib/download";
 import { downloadButtonState } from "$lib/state/omnibox";
-import { hybridSettings, lastBackendCommands, lastYtDlpJob, perDownloadArguments, tiktokIdentity } from "$lib/hybrid/settings";
+import { commandSuggestions, editableCommand, hybridSettings, lastBackendCommands, lastYtDlpJob, tiktokIdentity } from "$lib/hybrid/settings";
 
 const cobaltHosts = [
     /(^|\.)youtube\.com$/i, /(^|\.)youtu\.be$/i,
@@ -14,6 +14,7 @@ const cobaltHosts = [
     /(^|\.)pinterest\.[a-z.]+$/i, /(^|\.)tumblr\.com$/i,
     /(^|\.)streamable\.com$/i, /(^|\.)snapchat\.com$/i,
 ];
+let previewGeneration = 0;
 
 export const useYtDlp = (url: string) => {
     const settings = get(hybridSettings);
@@ -26,27 +27,48 @@ export const useYtDlp = (url: string) => {
     }
 };
 
-export const startYtDlp = async (url: string) => {
+const requestBody = (url: string) => {
     const settings = get(hybridSettings);
     const identity = get(tiktokIdentity);
+    return {
+        url,
+        provider: settings.provider,
+        youtubeCookieProfile: settings.youtubeCookieProfile || null,
+        playerClient: settings.playerClient || null,
+        fetchPot: settings.fetchPot,
+        potTrace: settings.potTrace,
+        manualPoTokens: settings.manualPoTokens || null,
+        tiktokDeviceId: identity.deviceId || null,
+        tiktokAppInfo: identity.appInfo || null,
+        typedOptions: settings.typedOptions,
+    };
+};
+
+export const refreshCommandPreview = async (url: string) => {
+    if (!useYtDlp(url)) return;
+    const generation = ++previewGeneration;
+    editableCommand.set("");
+    commandSuggestions.set([]);
+    const response = await fetch(`${env.YTDLP_API}/api/command`, {
+        method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(requestBody(url)),
+    });
+    if (!response.ok) return;
+    const preview = await response.json();
+    if (generation !== previewGeneration) return;
+    editableCommand.set(preview.command || "");
+    commandSuggestions.set(preview.suggestions || []);
+};
+
+export const startYtDlp = async (url: string) => {
+    if (!get(editableCommand).trim()) {
+        throw new Error("Wait for the yt-dlp command to be generated before downloading.");
+    }
     downloadButtonState.set("think");
     const response = await fetch(`${env.YTDLP_API}/api/jobs`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify({
-            url,
-            globalArguments: settings.globalArguments,
-            requestArguments: get(perDownloadArguments),
-            provider: settings.provider,
-            youtubeCookieProfile: settings.youtubeCookieProfile || null,
-            playerClient: settings.playerClient || null,
-            fetchPot: settings.fetchPot,
-            potTrace: settings.potTrace,
-            manualPoTokens: settings.manualPoTokens || null,
-            tiktokDeviceId: identity.deviceId || null,
-            tiktokAppInfo: identity.appInfo || null,
-            typedOptions: settings.typedOptions,
-        }),
+        body: JSON.stringify({ ...requestBody(url), command: get(editableCommand) }),
     });
     if (!response.ok) {
         const message = await response.json().catch(() => ({ detail: "yt-dlp request failed" }));
@@ -54,7 +76,6 @@ export const startYtDlp = async (url: string) => {
         throw new Error(message.detail || "yt-dlp request failed");
     }
     const job = await response.json();
-    perDownloadArguments.set("");
     lastBackendCommands.set((job.commands || []).map((command: string) => ({ command, output: "", returncode: null, state: "pending" })));
     lastYtDlpJob.set(job.id);
     const deadline = Date.now() + 15 * 60 * 1000;
